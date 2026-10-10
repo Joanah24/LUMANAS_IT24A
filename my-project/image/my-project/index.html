@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Maps</title>
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+
+        .popup-image {
+            max-width: 200px;
+            height: auto;
+        }
+    </style>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <h1>Simple Maps</h1>
+    <div id="map"></div>
+
+    <script>
+        const map = L.map('map').setView([8.360, 124.868], 17);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        async function initMap(mapDataUrl) {
+            try {
+                const response = await fetch(mapDataUrl);
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load JSON: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                data.forEach(pin => {
+                    const marker = L.marker([pin.lat, pin.lng]).addTo(map);
+
+                    const image = pin.image
+                        ? `<img src="${pin.image}" class="popup-image" alt="${pin.title || 'Location image'}">`
+                        : '';
+
+                    marker.bindPopup(`
+                        <strong>${pin.title || 'Location'}</strong>
+                        <hr>
+                        ${image}
+                    `);
+                });
+
+            } catch (error) {
+                console.error('Error loading map data:', error);
+            }
+        }
+
+        initMap('./campus-map.json');
+    </script>
+</body>
+</html>
